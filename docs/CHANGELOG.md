@@ -4,6 +4,7 @@ Newest first. One line per change.
 
 | Date | Change |
 | --- | --- |
+| 2026-10-15 | Added skill tagging: 48 skills from a scan of 339 postings (`pipeline/tag/skills.py`, `docs/SKILLS.md`), migration `004` (`skills_from_snippet` flag, `skill_demand` view) |
 | 2026-10-15 | Hardened `pipeline/run.py`: checks secrets at start; if one source fails the other still loads, then the run exits red. Adzuna jobs are not closed on a day Adzuna fails |
 | 2026-10-15 | First scheduled-style run on GitHub Actions succeeded (5m 53s), after adding the missing `REED_API_KEY` secret |
 | 2026-10-15 | Dedup key changed to company \| title \| region; added `towns` (migration `003`), training-provider blocklist (ITOL), finance-reporting exclusion and `pipeline/rebuild.py`; Reed details now reused from `raw_postings` |

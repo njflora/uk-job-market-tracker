@@ -17,6 +17,7 @@ import psycopg
 from dotenv import load_dotenv
 
 from pipeline import mapping, store
+from pipeline.tag import skills
 from pipeline.tag.titles import classify_title
 
 
@@ -87,6 +88,7 @@ def main():
                 )
 
         stats["marked_inactive"] = store.mark_inactive(conn)
+        stats["skill_tagged_postings"], stats["skill_links"] = skills.tag_all(conn)
         stats["postings_after"] = conn.execute("select count(*) from postings").fetchone()[0]
         stats["postings_with_several_towns"] = conn.execute(
             "select count(*) from postings where cardinality(towns) > 1"

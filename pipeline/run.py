@@ -21,6 +21,7 @@ from dotenv import load_dotenv
 
 from pipeline import mapping, store
 from pipeline.sources import adzuna, reed
+from pipeline.tag import skills
 from pipeline.tag.titles import classify_title
 
 REED_TERMS = [
@@ -156,6 +157,7 @@ def main():
 
         # Only close Adzuna jobs if Adzuna actually ran; otherwise an outage would close them all.
         stats["marked_inactive"] = store.mark_inactive(conn, include_adzuna=adzuna_result is not None)
+        stats["skill_tagged_postings"], stats["skill_links"] = skills.tag_all(conn)
         conn.commit()
 
     print_summary(stats)

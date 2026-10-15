@@ -37,6 +37,7 @@ The same job appeared in both sources: Lead Data Analyst at Marshall Wolfe, Lond
 | `full_time` | `fullTime` (details) | none | |
 | `applications` | `applications` (search) | none | Use the search value; details returned `applicationCount = 0` for a job with 118 in search |
 | `role_family` | from `jobTitle` | from `title` | `pipeline/tag/titles.py`, e.g. `BI Developer` |
+| `skills_from_snippet` | `false` | `true` | Adzuna text is a 500-character snippet, so its skill tags are incomplete |
 
 ## Rules decided so far
 
@@ -48,6 +49,7 @@ The same job appeared in both sources: Lead Data Analyst at Marshall Wolfe, Lond
 6. **Regions:** both sources map to the 12 UK regions (`pipeline/tag/clean.py`). Adzuna uses `location.area[1]`; Reed locations are looked up on postcodes.io (`pipeline/tag/regions.py`). A failed lookup leaves the region empty instead of stopping the run.
 7. **Inactive postings:** a Reed job is closed after its `expires_at`; an Adzuna job is closed when it has not been seen for 3 days. Rows are never deleted.
 8. **Rebuilds:** `python -m pipeline.rebuild` replays `raw_postings` with the current rules. No Reed or Adzuna calls; first-seen and last-seen dates are kept.
+9. **Skills:** 48 skills in 7 categories, tagged from title + description on every run (`pipeline/tag/skills.py`, `docs/SKILLS.md`). Adzuna rows are flagged `skills_from_snippet`; market-wide skill figures use Reed rows only.
 
 ## Open questions
 
