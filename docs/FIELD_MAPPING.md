@@ -44,7 +44,9 @@ The same job appeared in both sources: Lead Data Analyst at Marshall Wolfe, Lond
 3. **Cross-source duplicates:** when Reed and Adzuna hold the same job, the Reed row wins, because it has the full description and the employer's own salary.
 4. **Extra Reed fields:** `contract_type`, `full_time` and `applications` are loaded (migration `002`). Applications measures competition per job.
 5. **Same job, several towns:** kept as separate rows (e.g. Matchtech's Commercial Analyst in Basingstoke and Winchester), because the dedup key includes location.
+6. **Regions:** both sources map to the 12 UK regions (`pipeline/tag/clean.py`). Adzuna uses `location.area[1]`; Reed locations are looked up on postcodes.io (`pipeline/tag/regions.py`). A failed lookup leaves the region empty instead of stopping the run.
+7. **Inactive postings:** a Reed job is closed after its `expires_at`; an Adzuna job is closed when it has not been seen for 3 days. Rows are never deleted.
 
 ## Open questions
 
-- **Region lookup for Reed towns:** use postcodes.io for postcodes and a small town-to-region table for the rest.
+- **postcodes.io field names:** the code reads `region`, then `country`. This is confirmed only by tests with fake responses; the first real run will show whether Reed regions fill in.
