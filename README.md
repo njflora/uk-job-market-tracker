@@ -1,6 +1,6 @@
 # UK BI Job Tracker
 
-A self-updating tracker of UK Business Intelligence and Data Analyst job postings. Every morning it collects new postings, removes duplicates and training-course adverts, and tags each job with the skills it asks for.
+A self-updating tracker of UK Business Intelligence and Data Analyst job postings, with a CV matcher on top. Add a CV and it shows how close you are to each type of BI role, which skills you are missing, and which live jobs fit you best. Every morning it collects new postings, removes duplicates and training-course adverts, and tags each job with the skills it asks for.
 
 **Live site:** https://njflora.github.io/uk-job-market-tracker/
 
@@ -8,6 +8,7 @@ A self-updating tracker of UK Business Intelligence and Data Analyst job posting
 
 ## What it shows
 
+- **Match my CV.** Add a CV (PDF, Word or pasted text) to see your closest role type, the core skills you have, the ones you are close on, and the ones you are missing. Then jump to the jobs that fit you best. The CV is read in your browser and never uploaded.
 - Every in-scope UK posting in one filterable table: role, region, town, salary, contract type and skills.
 - What employers ask for: the share of postings that mention each of 48 tracked skills.
 - Where each job came from, with a link to the original advert.
@@ -44,7 +45,8 @@ flowchart LR
 3. **Filter and clean.** Out-of-scope titles and training-course adverts are dropped. Locations are mapped to the 12 UK regions, salaries are converted to yearly figures, and company names are normalised.
 4. **Deduplicate.** The same job on both sites, or under several towns, becomes one row. The key is company, title and region; every town is kept so the town filter still works.
 5. **Tag skills.** Each posting is checked against 48 skills in 7 categories. Adzuna only provides a 500-character snippet, so skill figures use full-text Reed postings only.
-6. **Serve.** The site reads two read-only database views through Supabase's public API. Row level security stops the public key from reading raw data or changing anything.
+6. **Serve.** The site reads three read-only database views through Supabase's public API. Row level security stops the public key from reading raw data or changing anything.
+7. **Match.** In the browser, a CV is tagged with the same 48 skill rules and scored against each role type's core skills (named in at least 25% of that role's postings). A sibling skill, such as Tableau for Power BI, counts as half.
 
 ## Data quality decisions
 
@@ -95,7 +97,6 @@ python -m pipeline.run
 
 ## Roadmap
 
-- **v2: Match my CV.** Read a CV in the browser, compare its skills with each role type, and show which skills are missing. The CV never leaves the visitor's computer.
 - **Gap-to-project library.** For each missing skill, a small project to close the gap.
 
 ## Data sources

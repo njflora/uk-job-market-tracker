@@ -27,3 +27,7 @@ export async function loadPostings() {
 export function loadSkillDemand() {
   return get('skill_demand?select=*&order=postings.desc')
 }
+
+export function loadRoleProfiles() {
+  return get('role_skill_profile?select=*')
+}

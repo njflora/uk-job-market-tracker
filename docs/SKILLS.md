@@ -49,5 +49,7 @@ Adzuna postings are still tagged, but they carry `skills_from_snippet = true`. T
 | Microsoft Fabric | "the fabric of our business" | "Microsoft Fabric", or capital "Fabric" |
 | Spark | "spark ideas" | Capital "Spark", PySpark or Apache Spark |
 
+The CV matcher uses a JavaScript copy of these patterns (`frontend/src/skills.js`). Change both together, and run `node frontend/src/skills.test.mjs`.
+
 Each posting's title and description are both searched, so "Power BI Developer" is tagged Power BI even if the text never repeats it.
 Tags are rebuilt from scratch on every run, so a change to the list applies to all postings the next morning.

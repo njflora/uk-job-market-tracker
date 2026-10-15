@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { loadPostings, loadSkillDemand } from './api.js'
+import { loadPostings, loadSkillDemand, loadRoleProfiles } from './api.js'
+import { buildProfiles, rankArchetypes, matchPosting } from './match.js'
+import MatchSection from './MatchSection.jsx'
 
 const ROLE_FAMILIES = [
   'Data Analyst', 'BI Analyst', 'BI Developer', 'Power BI Developer',
@@ -33,6 +35,8 @@ const EMPTY_FILTERS = {
 export default function App() {
   const [postings, setPostings] = useState([])
   const [demand, setDemand] = useState([])
+  const [profiles, setProfiles] = useState([])
+  const [cvSkills, setCvSkills] = useState(null)
   const [status, setStatus] = useState('loading')
   const [f, setF] = useState(EMPTY_FILTERS)
   const [sort, setSort] = useState('newest')
@@ -40,8 +44,8 @@ export default function App() {
   const [filtersOpen, setFiltersOpen] = useState(false)
 
   useEffect(() => {
-    Promise.all([loadPostings(), loadSkillDemand()])
-      .then(([p, d]) => { setPostings(p); setDemand(d); setStatus('ready') })
+    Promise.all([loadPostings(), loadSkillDemand(), loadRoleProfiles()])
+      .then(([p, d, r]) => { setPostings(p); setDemand(d); setProfiles(buildProfiles(r)); setStatus('ready') })
       .catch((e) => { console.error(e); setStatus('error') })
   }, [])
 
@@ -52,6 +56,26 @@ export default function App() {
     [postings],
   )
   const skillRank = useMemo(() => new Map(demand.map((d, i) => [d.skill, i])), [demand])
+
+  const archetypes = useMemo(() => (cvSkills ? rankArchetypes(profiles, cvSkills) : []), [profiles, cvSkills])
+  const demandBySkill = useMemo(() => new Map(demand.map((d) => [d.skill, Number(d.pct_of_postings)])), [demand])
+  const matches = useMemo(() => {
+    const m = new Map()
+    if (cvSkills) for (const p of postings) m.set(p.posting_id, matchPosting(p, cvSkills))
+    return m
+  }, [postings, cvSkills])
+
+  function seeJobs(family) {
+    setF({ ...EMPTY_FILTERS, roles: new Set([family]) })
+    setSort('match')
+    setPage(0)
+    document.getElementById('tracker')?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  function clearCv() {
+    setCvSkills(null)
+    if (sort === 'match') setSort('newest')
+  }
 
   const filtered = useMemo(() => {
     const q = f.q.trim().toLowerCase()
@@ -71,9 +95,13 @@ export default function App() {
       newest: (a, b) => (b.posted_at || '').localeCompare(a.posted_at || ''),
       salary: (a, b) => (b.salary_max || b.salary_min || 0) - (a.salary_max || a.salary_min || 0),
       applicants: (a, b) => (a.applications ?? 1e9) - (b.applications ?? 1e9),
+      match: (a, b) => {
+        const ma = matches.get(a.posting_id), mb = matches.get(b.posting_id)
+        return ((mb?.ratio ?? -1) - (ma?.ratio ?? -1)) || ((mb?.met ?? 0) - (ma?.met ?? 0))
+      },
     }[sort]
     return rows.sort(by)
-  }, [postings, f, sort])
+  }, [postings, f, sort, matches])
 
   const roleCounts = useMemo(() => {
     const c = Object.fromEntries(ROLE_FAMILIES.map((r) => [r, 0]))
@@ -99,19 +127,33 @@ export default function App() {
             <span>UK BI Job Tracker</span>
           </a>
           <nav aria-label="Main" className="nav">
-            <a href="#tracker" className="nav-link active">Tracker</a>
+            <a href="#match" className="nav-link active">Match my CV</a>
+            <a href="#tracker" className="nav-link">Jobs</a>
             <a href="#skills" className="nav-link">Skill demand</a>
             <a href="#about" className="nav-link">About the data</a>
-            <span className="nav-link muted">Match my CV <span className="soon">Coming in v2</span></span>
           </nav>
         </div>
       </header>
 
       <main id="top" className="wrap main">
-        <section className="hero">
+        {status === 'error' && (
+          <p role="alert" className="panel error">The job data could not be loaded just now. Please try again in a minute.</p>
+        )}
+
+        <MatchSection
+          cvSkills={cvSkills}
+          onCv={(skills) => setCvSkills(skills)}
+          onClear={clearCv}
+          archetypes={archetypes}
+          demandBySkill={demandBySkill}
+          onSeeJobs={seeJobs}
+          ready={status === 'ready'}
+        />
+
+        <section className="hero market" aria-labelledby="market-h">
           <div className="hero-text">
             <p className="eyebrow">Updated daily from Reed and Adzuna</p>
-            <h1>Every UK BI and Data Analyst job, in one table.</h1>
+            <h2 id="market-h" className="market-h">Every UK BI and Data Analyst job, in one table.</h2>
             <p className="lede">Duplicates merged, training-course adverts removed, and every listing tagged with the skills it asks for.</p>
           </div>
           <dl className="stats">
@@ -120,10 +162,6 @@ export default function App() {
             <div className="stat"><dt>Last refresh</dt><dd className="small">{status === 'ready' ? lastRefresh : '…'}</dd></div>
           </dl>
         </section>
-
-        {status === 'error' && (
-          <p role="alert" className="panel error">The job data could not be loaded just now. Please try again in a minute.</p>
-        )}
 
         <div className="layout" id="tracker">
           <aside className="panel filters" aria-label="Filters">
@@ -215,6 +253,7 @@ export default function App() {
                 <h2 id="results-h">{filtered.length} postings <span className="muted-text">match your filters</span></h2>
                 <label className="sort">Sort by
                   <select value={sort} onChange={(e) => { setSort(e.target.value); setPage(0) }}>
+                    {cvSkills && <option value="match">Best match for my CV</option>}
                     <option value="newest">Newest first</option>
                     <option value="salary">Highest salary</option>
                     <option value="applicants">Fewest applicants</option>
@@ -228,6 +267,7 @@ export default function App() {
                       <th scope="col">Role</th>
                       <th scope="col">Location</th>
                       <th scope="col">Salary</th>
+                      {cvSkills && <th scope="col">Your match</th>}
                       <th scope="col">Skills</th>
                       <th scope="col" className="right">Applicants</th>
                       <th scope="col">Posted</th>
@@ -236,10 +276,10 @@ export default function App() {
                   </thead>
                   <tbody>
                     {status === 'loading' && (
-                      <tr><td colSpan="7" className="empty">Loading today’s postings…</td></tr>
+                      <tr><td colSpan={cvSkills ? 8 : 7} className="empty">Loading today’s postings…</td></tr>
                     )}
                     {status === 'ready' && pageRows.length === 0 && (
-                      <tr><td colSpan="7" className="empty">No postings match these filters. Try clearing one.</td></tr>
+                      <tr><td colSpan={cvSkills ? 8 : 7} className="empty">No postings match these filters. Try clearing one.</td></tr>
                     )}
                     {pageRows.map((p) => {
                       const skills = [...(p.skills || [])].sort((a, b) => (skillRank.get(a) ?? 99) - (skillRank.get(b) ?? 99))
@@ -259,9 +299,24 @@ export default function App() {
                             <div className="mono">{salary || <span className="sub">Not stated</span>}</div>
                             {salary && p.salary_is_predicted && <span className="tag-est">Adzuna estimate</span>}
                           </td>
+                          {cvSkills && (
+                            <td className="nowrap">
+                              {(() => {
+                                const m = matches.get(p.posting_id)
+                                if (!m) return <span className="sub small">No skills listed</span>
+                                return (
+                                  <>
+                                    <div className="mono">{m.met} of {m.total}</div>
+                                    <div className="mini-meter" role="img" aria-label={`${m.met} of ${m.total} skills`}><span style={{ width: `${Math.round(m.ratio * 100)}%` }} /></div>
+                                    {m.partial && <div className="sub small">snippet only</div>}
+                                  </>
+                                )
+                              })()}
+                            </td>
+                          )}
                           <td>
                             <div className="chips">
-                              {skills.slice(0, 5).map((s) => <span className="chip" key={s}>{s}</span>)}
+                              {skills.slice(0, 5).map((s) => <span className={cvSkills?.has(s) ? 'chip yours' : 'chip'} key={s}>{s}</span>)}
                               {skills.length > 5 && <span className="chip more">+{skills.length - 5}</span>}
                               {p.skills_from_snippet && <span className="partial">Partial: description is a snippet</span>}
                             </div>

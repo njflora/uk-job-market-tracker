@@ -4,6 +4,7 @@ Newest first. One line per change.
 
 | Date | Change |
 | --- | --- |
+| 2026-10-15 | v2 "Match my CV" added and moved to the top of the page: in-browser CV reading (PDF, Word, paste), role-archetype scores with have / close / missing skills, "Your match" column and best-match sort in the tracker; migration `006` (`role_skill_profile` view) |
 | 2026-10-15 | Site live at njflora.github.io/uk-job-market-tracker. Finance exclusion extended to Insight titles and FP&A; empty role filters hidden; missing locations show "Not stated"; README written |
 | 2026-10-15 | Added the v1 public site (`frontend/`, Vite + React), read-only access rules and public views (migration `005`), and a GitHub Pages deploy workflow |
 | 2026-10-15 | Added skill tagging: 48 skills from a scan of 339 postings (`pipeline/tag/skills.py`, `docs/SKILLS.md`), migration `004` (`skills_from_snippet` flag, `skill_demand` view) |
