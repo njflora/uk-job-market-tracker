@@ -11,16 +11,19 @@ How this project could continue after the v1 tracker and v2 CV matcher. Each pha
 | v1 tracker | Public, filterable table and skill-demand chart on GitHub Pages |
 | v2 matcher | In-browser CV reading, role-archetype scores, best-match job sorting |
 | Security | Row level security: the public key can only read three views |
+| Upkeep | Tests on every push, weekly backup, monthly keep-alive, seniority filter |
 
-## Phase 1: Harden the foundations (1 to 2 sessions)
+## Phase 1: Harden the foundations (done)
 
 The goal is a pipeline that can run untouched for months.
 
 - ~~Store raw data only when it changes~~ (done 15 Oct 2026).
 - ~~Weekly backup~~ (done 15 Oct 2026).
-- **Automatic tests.** Run the Python and JavaScript skill tests on every push, so the two copies of the skill rules can never drift apart.
-- **Seniority tagging.** Fill the empty `seniority` column (graduate, junior, mid, senior, lead) from titles and descriptions, and add it as a filter.
-- **Keep-alive.** GitHub turns off scheduled workflows after 60 days without a commit. A small monthly job prevents that.
+- ~~Automatic tests~~ (done 15 Oct 2026). Python and JavaScript share one list of skill test cases, so the two copies of the rules cannot drift apart.
+- ~~Seniority tagging~~ (done 15 Oct 2026). From titles only; most titles name no level and show as "Not stated".
+- ~~Keep-alive~~ (done 15 Oct 2026). A monthly job adds an empty commit when the repository has been quiet for 45 days.
+
+Still to prove: 30 days of daily runs with no failures (see the success measures below).
 
 ## Phase 2: Gap-to-project library (2 to 3 sessions)
 

@@ -4,6 +4,7 @@ Newest first. One line per change.
 
 | Date | Change |
 | --- | --- |
+| 2026-10-15 | Phase 1 finished. Seniority from job titles (`pipeline/tag/seniority.py`, migration `008`) with a Seniority filter on the site; automatic tests on every push (`tests/`, shared `tests/skill_cases.json`, `ci.yml`); monthly keep-alive workflow (`keepalive.yml`); README screenshot now shows Match my CV |
 | 2026-10-15 | Raw records saved only when changed (migration `007`, `last_seen_at`); weekly `pg_dump` backup workflow |
 | 2026-10-15 | Added `docs/ROADMAP.md` (7 phases, from hardening to any UK job) and a roadmap summary in the README |
 | 2026-10-15 | v2 "Match my CV" added and moved to the top of the page: in-browser CV reading (PDF, Word, paste), role-archetype scores with have / close / missing skills, "Your match" column and best-match sort in the tracker; migration `006` (`role_skill_profile` view) |

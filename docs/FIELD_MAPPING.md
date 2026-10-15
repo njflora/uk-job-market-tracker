@@ -50,6 +50,7 @@ The same job appeared in both sources: Lead Data Analyst at Marshall Wolfe, Lond
 7. **Inactive postings:** a Reed job is closed after its `expires_at`; an Adzuna job is closed when it has not been seen for 3 days. Rows are never deleted.
 8. **Rebuilds:** `python -m pipeline.rebuild` replays `raw_postings` with the current rules. No Reed or Adzuna calls; first-seen and last-seen dates are kept.
 9. **Skills:** 48 skills in 7 categories, tagged from title + description on every run (`pipeline/tag/skills.py`, `docs/SKILLS.md`). Adzuna rows are flagged `skills_from_snippet`; market-wide skill figures use Reed rows only.
+10. **Seniority:** taken from the job title only, because descriptions mention several levels ("you will support senior analysts"). Lead (lead, principal, head of), then Senior (senior, snr, sr), then Entry (junior, graduate, trainee, apprentice, intern, placement, entry level), then Mid (mid level, intermediate). The first match wins, so "Senior Lead" is Lead. Titles that name no level stay empty and show as "Not stated" (`pipeline/tag/seniority.py`, migration `008`).
 
 ## Open questions
 

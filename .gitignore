@@ -225,3 +225,6 @@ data/
 # front end
 node_modules/
 .env.local
+
+# test cache
+.pytest_cache/

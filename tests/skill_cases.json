@@ -1,0 +1,87 @@
+{
+  "_about": "Skill-tagging test cases shared by the Python tagger (tests/test_skills.py) and the website copy (frontend/src/skills.test.mjs). Both must give exactly these answers, so the two rule sets cannot drift apart. Add a case here whenever a rule changes.",
+  "cases": [
+    {
+      "text": "of a range of statistical techniques in R or Python (or SPSS) for examining",
+      "skills": [
+        "Python",
+        "R",
+        "SPSS",
+        "Statistics"
+      ]
+    },
+    {
+      "text": "decisions across A&R, Marketing, Digital",
+      "skills": []
+    },
+    {
+      "text": "outcomes- per squad R&Rs Profile Significant experience",
+      "skills": []
+    },
+    {
+      "text": "Experience with Python/R, predictive analytics or machine learning",
+      "skills": [
+        "Machine learning",
+        "Python",
+        "R"
+      ]
+    },
+    {
+      "text": "You will excel in a fast-paced team. Advanced Excel and PowerBI required.",
+      "skills": [
+        "Excel",
+        "Power BI"
+      ]
+    },
+    {
+      "text": "Strong team dynamics; experience of Microsoft Dynamics 365 a plus",
+      "skills": [
+        "Dynamics 365"
+      ]
+    },
+    {
+      "text": "part of the fabric of our business",
+      "skills": []
+    },
+    {
+      "text": "Experience with Microsoft Fabric lakehouses and Fabric pipelines",
+      "skills": [
+        "Microsoft Fabric"
+      ]
+    },
+    {
+      "text": "spark ideas and curiosity",
+      "skills": []
+    },
+    {
+      "text": "PySpark and Databricks; Spark SQL",
+      "skills": [
+        "Databricks",
+        "SQL",
+        "Spark"
+      ]
+    },
+    {
+      "text": "Senior Power BI Developer",
+      "skills": [
+        "Power BI"
+      ]
+    },
+    {
+      "text": "T-SQL, SQL Server, SSIS, SSRS and Azure Data Factory (ADF)",
+      "skills": [
+        "Azure",
+        "Data Factory",
+        "SQL",
+        "SQL Server",
+        "SSIS",
+        "SSRS",
+        "T-SQL"
+      ]
+    },
+    {
+      "text": "excellent communication skills",
+      "skills": []
+    }
+  ]
+}

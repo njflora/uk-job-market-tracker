@@ -1,0 +1,43 @@
+# Runs the tests on every push and pull request.
+# Python: skill, title, cleaning and seniority rules (tests/).
+# JavaScript: the website's copy of the skill rules, against the same cases.
+# Then checks the site still builds.
+name: Tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+      - name: Install Python packages
+        run: pip install -r requirements-dev.txt
+      - name: Python tests
+        run: python -m pytest -q
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install site packages
+        working-directory: frontend
+        run: npm ci
+      - name: Website skill rules
+        run: node frontend/src/skills.test.mjs
+      - name: Site builds
+        working-directory: frontend
+        run: npm run build

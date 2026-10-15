@@ -8,6 +8,8 @@ const ROLE_FAMILIES = [
   'BI Specialist', 'Reporting / MI Analyst', 'Insight Analyst',
 ]
 const CONTRACTS = ['Permanent', 'Contract', 'Temporary']
+const LEVELS = ['Entry', 'Mid', 'Senior', 'Lead', 'Not stated']
+const levelOf = (p) => p.seniority || 'Not stated'
 const QUICK_SKILLS = ['SQL', 'Power BI', 'Excel', 'Python', 'DAX', 'Tableau', 'Azure', 'Microsoft Fabric']
 const PAGE_SIZE = 25
 
@@ -28,7 +30,7 @@ function toggle(set, value) {
 }
 
 const EMPTY_FILTERS = {
-  q: '', roles: new Set(ROLE_FAMILIES), region: '', town: '', minSalary: 0,
+  q: '', roles: new Set(ROLE_FAMILIES), levels: new Set(LEVELS), region: '', town: '', minSalary: 0,
   hideEstimated: false, skills: new Set(), contracts: new Set(CONTRACTS),
 }
 
@@ -82,6 +84,7 @@ export default function App() {
     const town = f.town.trim().toLowerCase()
     const rows = postings.filter((p) => {
       if (!f.roles.has(p.role_family)) return false
+      if (!f.levels.has(levelOf(p))) return false
       if (q && !`${p.title} ${p.company ?? ''}`.toLowerCase().includes(q)) return false
       if (f.region && p.region !== f.region) return false
       if (town && !(p.towns || []).some((t) => t.toLowerCase().includes(town))) return false
@@ -106,6 +109,12 @@ export default function App() {
   const roleCounts = useMemo(() => {
     const c = Object.fromEntries(ROLE_FAMILIES.map((r) => [r, 0]))
     for (const p of postings) if (p.role_family in c) c[p.role_family] += 1
+    return c
+  }, [postings])
+
+  const levelCounts = useMemo(() => {
+    const c = Object.fromEntries(LEVELS.map((l) => [l, 0]))
+    for (const p of postings) c[levelOf(p)] += 1
     return c
   }, [postings])
 
@@ -187,6 +196,16 @@ export default function App() {
                 <label key={r} className="check">
                   <span><input type="checkbox" checked={f.roles.has(r)} onChange={() => update({ roles: toggle(f.roles, r) })} />{r}</span>
                   <span className="count">{roleCounts[r]}</span>
+                </label>
+              ))}
+            </fieldset>
+
+            <fieldset className="field">
+              <legend>Seniority</legend>
+              {LEVELS.filter((l) => status !== 'ready' || levelCounts[l] > 0).map((l) => (
+                <label key={l} className="check">
+                  <span><input type="checkbox" checked={f.levels.has(l)} onChange={() => update({ levels: toggle(f.levels, l) })} />{l}</span>
+                  <span className="count">{levelCounts[l]}</span>
                 </label>
               ))}
             </fieldset>
@@ -289,7 +308,7 @@ export default function App() {
                           <td>
                             <a className="job-title" href={p.url} target="_blank" rel="noopener noreferrer">{p.title}</a>
                             <div className="sub">{p.company}</div>
-                            <div className="family">{p.role_family}{p.contract_type ? ` · ${p.contract_type}` : ''}</div>
+                            <div className="family">{p.role_family}{p.seniority ? ` · ${p.seniority}` : ''}{p.contract_type ? ` · ${p.contract_type}` : ''}</div>
                           </td>
                           <td>
                             <div>{p.region || <span className="sub">Not stated</span>}</div>

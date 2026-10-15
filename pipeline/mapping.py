@@ -7,6 +7,7 @@ from pipeline.tag.clean import (
     canonical_region, dedup_key, parse_iso_date, parse_reed_date, strip_html, tidy,
 )
 from pipeline.tag.regions import place_for
+from pipeline.tag.seniority import seniority_for
 
 
 def from_reed(search_row, details_row, role_family):
@@ -25,7 +26,7 @@ def from_reed(search_row, details_row, role_family):
         "location_text": location,
         "town": town,
         "region": region,
-        "seniority": None,  # tagged in a later step
+        "seniority": seniority_for(title),
         "salary_min": d.get("yearlyMinimumSalary"),
         "salary_max": d.get("yearlyMaximumSalary"),
         "salary_period": d.get("salaryType"),
@@ -57,7 +58,7 @@ def from_adzuna(row, role_family):
         "location_text": tidy((row.get("location") or {}).get("display_name")),
         "town": town,
         "region": region,
-        "seniority": None,
+        "seniority": seniority_for(title),
         "salary_min": row.get("salary_min"),
         "salary_max": row.get("salary_max"),
         "salary_period": "per annum" if row.get("salary_min") else None,

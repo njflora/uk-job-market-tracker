@@ -4,12 +4,12 @@ A self-updating tracker of UK Business Intelligence and Data Analyst job posting
 
 **Live site:** https://njflora.github.io/uk-job-market-tracker/
 
-![The tracker page: skill demand chart and filterable job table](docs/screenshot.png)
+![The Match my CV section: closest role type and the skills to add](docs/screenshot.png)
 
 ## What it shows
 
 - **Match my CV.** Add a CV (PDF, Word or pasted text) to see your closest role type, the core skills you have, the ones you are close on, and the ones you are missing. Then jump to the jobs that fit you best. The CV is read in your browser and never uploaded.
-- Every in-scope UK posting in one filterable table: role, region, town, salary, contract type and skills.
+- Every in-scope UK posting in one filterable table: role, seniority, region, town, salary, contract type and skills.
 - What employers ask for: the share of postings that mention each of 48 tracked skills.
 - Where each job came from, with a link to the original advert.
 
@@ -77,8 +77,9 @@ pipeline/       Python: sources, cleaning, tagging, loading
 sql/migrations/ Database schema, run in order
 frontend/       React site
 scripts/        One-off test scripts
+tests/          Automatic tests, run on every push
 docs/           Field mapping, skills, decisions, changelog
-.github/        Daily ingest and site deploy workflows
+.github/        Daily ingest, site deploy, tests, backup and keep-alive workflows
 ```
 
 ## Running it yourself
@@ -95,9 +96,11 @@ pip install -r requirements.txt
 python -m pipeline.run
 ```
 
+To run the tests: `pip install -r requirements-dev.txt`, then `python -m pytest` and `node frontend/src/skills.test.mjs`.
+
 ## Roadmap
 
-1. **Harden the foundations:** automatic tests, seniority tagging and a schedule keep-alive (raw-data savings and weekly backups are done).
+1. ~~**Harden the foundations**~~ (done): automatic tests, seniority tagging, schedule keep-alive, raw-data savings and weekly backups.
 2. **Gap-to-project library:** a small, real project for every missing skill, starting with Microsoft Fabric and Azure.
 3. **Trends over time:** rising and falling skills, and salary by role, once there are 8 weeks of data.
 4. **All data roles:** Data Engineer, Data Scientist and Analytics Engineer.
