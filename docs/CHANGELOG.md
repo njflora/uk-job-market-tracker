@@ -4,6 +4,8 @@ Newest first. One line per change.
 
 | Date | Change |
 | --- | --- |
+| 2026-10-15 | Hardened `pipeline/run.py`: checks secrets at start; if one source fails the other still loads, then the run exits red. Adzuna jobs are not closed on a day Adzuna fails |
+| 2026-10-15 | First scheduled-style run on GitHub Actions succeeded (5m 53s), after adding the missing `REED_API_KEY` secret |
 | 2026-10-15 | Dedup key changed to company \| title \| region; added `towns` (migration `003`), training-provider blocklist (ITOL), finance-reporting exclusion and `pipeline/rebuild.py`; Reed details now reused from `raw_postings` |
 | 2026-10-15 | Added daily GitHub Actions workflow (`.github/workflows/ingest.yml`), 05:17 UTC plus a manual run button |
 | 2026-10-15 | First real load: 548 postings stored; 516 (94%) have a region |

@@ -11,6 +11,7 @@ API budget per run (defaults below):
 
 import argparse
 import os
+import sys
 import time
 from collections import Counter
 
@@ -32,6 +33,30 @@ ADZUNA_TERMS = [
 ]
 MAX_PAGES = 2
 ADZUNA_MAX_DAYS_OLD = 30
+
+# Secrets each part needs. On GitHub a missing secret arrives as an empty string.
+NEEDS = {
+    "database": ["DATABASE_URL"],
+    "reed": ["REED_API_KEY"],
+    "adzuna": ["ADZUNA_APP_ID", "ADZUNA_APP_KEY"],
+}
+
+
+def missing_secrets(part):
+    return [name for name in NEEDS[part] if not os.environ.get(name, "").strip()]
+
+
+def collect_safely(name, collect, stats, errors):
+    """Run one source. If it fails, record why and carry on with the other source."""
+    missing = missing_secrets(name)
+    if missing:
+        errors.append(f"{name}: {', '.join(missing)} is empty. Add it to .env, or to GitHub secrets for scheduled runs.")
+        return None
+    try:
+        return collect(stats)
+    except requests.RequestException as exc:
+        errors.append(f"{name}: {exc}")
+        return None
 
 
 def collect_reed(stats):
@@ -81,15 +106,23 @@ def main():
 
     load_dotenv()
     stats = Counter()
+    errors = []
 
-    reed_jobs = collect_reed(stats)
-    adzuna_jobs = collect_adzuna(stats)
+    if not args.dry_run and missing_secrets("database"):
+        sys.exit("DATABASE_URL is empty. Add it to .env, or to GitHub secrets for scheduled runs.")
+
+    # None means that source failed; {} means it worked but found nothing.
+    reed_result = collect_safely("reed", collect_reed, stats, errors)
+    adzuna_result = collect_safely("adzuna", collect_adzuna, stats, errors)
+    reed_jobs = reed_result or {}
+    adzuna_jobs = adzuna_result or {}
     stats["reed_in_scope"] = len(reed_jobs)
     stats["adzuna_in_scope"] = len(adzuna_jobs)
 
     if args.dry_run:
         families = Counter(f for _, f in list(reed_jobs.values()) + list(adzuna_jobs.values()))
         print_summary(stats, families)
+        finish(errors)
         return
 
     with psycopg.connect(os.environ["DATABASE_URL"]) as conn:
@@ -121,10 +154,21 @@ def main():
             posting["company_id"] = store.company_id_for(conn, posting["company"] or "")
             stats[f"adzuna_{store.upsert_posting(conn, posting)}"] += 1
 
-        stats["marked_inactive"] = store.mark_inactive(conn)
+        # Only close Adzuna jobs if Adzuna actually ran; otherwise an outage would close them all.
+        stats["marked_inactive"] = store.mark_inactive(conn, include_adzuna=adzuna_result is not None)
         conn.commit()
 
     print_summary(stats)
+    finish(errors)
+
+
+def finish(errors):
+    """Exit with an error (so GitHub shows the run red and emails you) if any source failed."""
+    if errors:
+        print("\nProblems this run:")
+        for e in errors:
+            print(f"  - {e}")
+        sys.exit(1)
 
 
 def print_summary(stats, families=None):

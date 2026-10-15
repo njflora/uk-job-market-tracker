@@ -84,15 +84,18 @@ def upsert_posting(conn, posting, seen_at=None):
     return "updated"
 
 
-def mark_inactive(conn, adzuna_grace_days=3):
+def mark_inactive(conn, adzuna_grace_days=3, include_adzuna=True):
     """Close postings that have expired (Reed) or not been seen for a few days (Adzuna).
 
     Rows are never deleted, so trend data survives.
+    include_adzuna=False skips the Adzuna rule, used when Adzuna failed this run.
     """
     reed = conn.execute(
         "update postings set is_active = false "
         "where is_active and source = 'reed' and expires_at < now()"
     ).rowcount
+    if not include_adzuna:
+        return reed
     adzuna = conn.execute(
         "update postings set is_active = false "
         "where is_active and source = 'adzuna' and last_seen < now() - make_interval(days => %s)",
