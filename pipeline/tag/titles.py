@@ -20,8 +20,10 @@ ROLE_FAMILIES = [
     ("Data Analyst", r"\bdata\b.*\banalyst\b"),
 ]
 
-# Finance and risk roles that use the word "reporting" (excluded by scope decision).
-FINANCE_REPORTING = r"\b(financial|finance|risk|regulatory|treasury|accounting)\b"
+# Finance and risk roles that use "reporting" or "insight" in the title (excluded by scope decision),
+# e.g. "Financial Reporting & Control Analyst", "FP&A Insights Analyst".
+FINANCE_REPORTING = r"\b(financial|finance|fp\s?&\s?a|risk|regulatory|treasury|accounting)\b"
+FINANCE_SENSITIVE = {"Reporting / MI Analyst", "Insight Analyst"}
 
 # Adverts for paid courses dressed up as jobs: by title wording ...
 TRAINING_AD = r"no experience (needed|required)|placement programme|career change programme|retrain"
@@ -44,7 +46,7 @@ def classify_title(title, company=None):
     )
     for family, pattern in ROLE_FAMILIES:
         if re.search(pattern, text):
-            if family == "Reporting / MI Analyst" and re.search(FINANCE_REPORTING, text):
+            if family in FINANCE_SENSITIVE and re.search(FINANCE_REPORTING, text):
                 return None, is_training_ad
             return family, is_training_ad
     return None, is_training_ad

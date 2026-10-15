@@ -4,6 +4,7 @@ Newest first. One line per change.
 
 | Date | Change |
 | --- | --- |
+| 2026-10-15 | Site live at njflora.github.io/uk-job-market-tracker. Finance exclusion extended to Insight titles and FP&A; empty role filters hidden; missing locations show "Not stated"; README written |
 | 2026-10-15 | Added the v1 public site (`frontend/`, Vite + React), read-only access rules and public views (migration `005`), and a GitHub Pages deploy workflow |
 | 2026-10-15 | Added skill tagging: 48 skills from a scan of 339 postings (`pipeline/tag/skills.py`, `docs/SKILLS.md`), migration `004` (`skills_from_snippet` flag, `skill_demand` view) |
 | 2026-10-15 | Hardened `pipeline/run.py`: checks secrets at start; if one source fails the other still loads, then the run exits red. Adzuna jobs are not closed on a day Adzuna fails |

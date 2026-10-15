@@ -145,7 +145,7 @@ export default function App() {
 
             <fieldset className="field">
               <legend>Role</legend>
-              {ROLE_FAMILIES.map((r) => (
+              {ROLE_FAMILIES.filter((r) => status !== 'ready' || roleCounts[r] > 0).map((r) => (
                 <label key={r} className="check">
                   <span><input type="checkbox" checked={f.roles.has(r)} onChange={() => update({ roles: toggle(f.roles, r) })} />{r}</span>
                   <span className="count">{roleCounts[r]}</span>
@@ -252,7 +252,7 @@ export default function App() {
                             <div className="family">{p.role_family}{p.contract_type ? ` · ${p.contract_type}` : ''}</div>
                           </td>
                           <td>
-                            <div>{p.region || '–'}</div>
+                            <div>{p.region || <span className="sub">Not stated</span>}</div>
                             <div className="sub small">{(p.towns || []).join(', ')}</div>
                           </td>
                           <td className="nowrap">

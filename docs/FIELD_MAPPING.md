@@ -41,7 +41,7 @@ The same job appeared in both sources: Lead Data Analyst at Marshall Wolfe, Lond
 
 ## Rules decided so far
 
-1. **Title scope:** Data Analyst, BI Analyst, BI Developer, Business Intelligence Analyst / Developer / Specialist, Power BI Developer, Reporting / MI Analyst, Insight Analyst. Reporting titles that also say financial, finance, risk, regulatory, treasury or accounting are out. Code: `pipeline/tag/titles.py`.
+1. **Title scope:** Data Analyst, BI Analyst, BI Developer, Business Intelligence Analyst / Developer / Specialist, Power BI Developer, Reporting / MI Analyst, Insight Analyst. Reporting and Insight titles that also say financial, finance, FP&A, risk, regulatory, treasury or accounting are out (e.g. "FP&A Insights Analyst"). "Financial Data Analyst" stays in: it is a data analyst role in a finance team. Code: `pipeline/tag/titles.py`.
 2. **Training adverts:** excluded, and never stored. Caught by title wording ("No Experience Needed", "Placement Programme") and by advertiser (ITOL Recruit, IT Online Learning), because their titles vary. ITOL alone made up at least 118 of the first 548 rows.
 3. **Cross-source duplicates:** when Reed and Adzuna hold the same job, the Reed row wins, because it has the full description and the employer's own salary.
 4. **Extra Reed fields:** `contract_type`, `full_time` and `applications` are loaded (migration `002`). Applications measures competition per job.
