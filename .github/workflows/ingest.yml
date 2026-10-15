@@ -1,0 +1,38 @@
+# Daily ingest: runs the pipeline once a day and on demand.
+# Secrets come from Settings > Secrets and variables > Actions.
+
+name: Daily ingest
+
+on:
+  schedule:
+    - cron: "17 5 * * *"   # 05:17 UTC every day (06:17 UK time in summer, 05:17 in winter)
+  workflow_dispatch:         # adds a "Run workflow" button on the Actions tab
+
+concurrency:
+  group: ingest              # never let two runs overlap
+  cancel-in-progress: false
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install packages
+        run: pip install -r requirements.txt
+
+      - name: Run the pipeline
+        env:
+          REED_API_KEY: ${{ secrets.REED_API_KEY }}
+          ADZUNA_APP_ID: ${{ secrets.ADZUNA_APP_ID }}
+          ADZUNA_APP_KEY: ${{ secrets.ADZUNA_APP_KEY }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: python -m pipeline.run

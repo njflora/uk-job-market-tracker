@@ -4,6 +4,8 @@ Newest first. One line per change.
 
 | Date | Change |
 | --- | --- |
+| 2026-10-15 | Added daily GitHub Actions workflow (`.github/workflows/ingest.yml`), 05:17 UTC plus a manual run button |
+| 2026-10-15 | First real load: 548 postings stored; 516 (94%) have a region |
 | 2026-10-15 | Added the first loader: `pipeline/run.py`, `store.py`, `mapping.py`, `tag/clean.py`, `tag/regions.py` (tested on fake data) |
 | 2026-10-15 | Added title filter (`pipeline/tag/titles.py`), field mapping (`docs/FIELD_MAPPING.md`) and migration `002` (contract type, full time, applications, role family) |
 | 2026-10-15 | Added Reed client and test script; first Reed call returned 1,973 matches |
