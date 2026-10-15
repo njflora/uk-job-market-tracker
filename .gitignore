@@ -221,3 +221,7 @@ __marimo__/
 
 # raw API samples
 data/
+
+# front end
+node_modules/
+.env.local

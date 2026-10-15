@@ -21,7 +21,9 @@ Why each service was chosen. Checked 13 October 2026.
 
 - Free on public repos. Scheduled workflows switch off after 60 days with no repo activity.
 
-## Hosting (later): Vercel for the front end, Render for the API
+## Hosting: GitHub Pages, no separate API for v1 (decided 15 Oct 2026)
 
-- Vercel Hobby is non-commercial only, which fits a portfolio project.
-- Render's free web service sleeps after 15 idle minutes and takes about a minute to wake.
+- The site is static (Vite + React) on GitHub Pages: no extra account, and it fits a portfolio kept on GitHub.
+- It reads Supabase's built-in REST API with the public "publishable" key. Migration `005` makes that key read-only: it can see `public_postings` and `skill_demand`, and nothing in `raw_postings`.
+- Render is no longer needed for v1. v2's CV matching is planned to run in the browser, so the CV never leaves the visitor's machine.
+- Rule for every future table: enable row level security in the same migration that creates it.
