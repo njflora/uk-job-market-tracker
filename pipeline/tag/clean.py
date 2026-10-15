@@ -51,9 +51,14 @@ def normalise_company(name):
     return re.sub(r"\s+", " ", text).strip()
 
 
-def dedup_key(company, title, town):
-    """The plan's dedup rule: same company + title + location = same job."""
-    return "|".join([normalise_company(company), normalise_key_part(title), normalise_key_part(town)])
+def dedup_key(company, title, region, town=None):
+    """Same company + title + region = same job (decided 15 Oct 2026).
+
+    Region, not town, because one job is often listed under several towns or postcodes.
+    If the region is unknown, fall back to the town so unrelated jobs are not merged.
+    """
+    place = region or town
+    return "|".join([normalise_company(company), normalise_key_part(title), normalise_key_part(place)])
 
 
 def strip_html(text):

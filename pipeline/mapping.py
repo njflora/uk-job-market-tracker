@@ -6,7 +6,7 @@ Follows docs/FIELD_MAPPING.md column by column.
 from pipeline.tag.clean import (
     canonical_region, dedup_key, parse_iso_date, parse_reed_date, strip_html, tidy,
 )
-from pipeline.tag.regions import region_for
+from pipeline.tag.regions import place_for
 
 
 def from_reed(search_row, details_row, role_family):
@@ -14,15 +14,17 @@ def from_reed(search_row, details_row, role_family):
     d = details_row or {}
     company = tidy(search_row.get("employerName"))
     title = tidy(search_row.get("jobTitle"))
-    town = tidy(search_row.get("locationName"))
+    location = tidy(search_row.get("locationName"))
+    region, town = place_for(location)
     return {
-        "dedup_key": dedup_key(company, title, town),
+        "dedup_key": dedup_key(company, title, region, town),
         "source": "reed",
         "source_job_id": str(search_row["jobId"]),
         "company": company,
         "title": title,
-        "location_text": town,
-        "region": region_for(town),
+        "location_text": location,
+        "town": town,
+        "region": region,
         "seniority": None,  # tagged in a later step
         "salary_min": d.get("yearlyMinimumSalary"),
         "salary_max": d.get("yearlyMaximumSalary"),
@@ -44,15 +46,17 @@ def from_adzuna(row, role_family):
     area = (row.get("location") or {}).get("area") or []
     company = tidy((row.get("company") or {}).get("display_name"))
     title = tidy(row.get("title"))
-    town = area[-1] if area else None
+    town = area[-1] if len(area) > 1 else None
+    region = canonical_region(area[1]) if len(area) > 1 else None
     return {
-        "dedup_key": dedup_key(company, title, town),
+        "dedup_key": dedup_key(company, title, region, town),
         "source": "adzuna",
         "source_job_id": str(row["id"]),
         "company": company,
         "title": title,
         "location_text": tidy((row.get("location") or {}).get("display_name")),
-        "region": canonical_region(area[1]) if len(area) > 1 else None,
+        "town": town,
+        "region": region,
         "seniority": None,
         "salary_min": row.get("salary_min"),
         "salary_max": row.get("salary_max"),

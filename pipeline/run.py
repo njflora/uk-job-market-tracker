@@ -40,7 +40,7 @@ def collect_reed(stats):
     for term in REED_TERMS:
         for row in reed.search_all(term, max_pages=MAX_PAGES):
             stats["reed_seen"] += 1
-            family, is_training = classify_title(row.get("jobTitle"))
+            family, is_training = classify_title(row.get("jobTitle"), row.get("employerName"))
             if is_training:
                 stats["reed_training_ads"] += 1
             elif family:
@@ -56,7 +56,7 @@ def collect_adzuna(stats):
         rows = adzuna.search_all(term, max_pages=MAX_PAGES, max_days_old=ADZUNA_MAX_DAYS_OLD)
         for row in rows:
             stats["adzuna_seen"] += 1
-            family, is_training = classify_title(row.get("title"))
+            family, is_training = classify_title(row.get("title"), (row.get("company") or {}).get("display_name"))
             if is_training:
                 stats["adzuna_training_ads"] += 1
             elif family:
@@ -64,10 +64,14 @@ def collect_adzuna(stats):
     return found
 
 
-def known_reed_ids(conn):
-    """Reed jobs already stored, so we skip their details call (saves API calls)."""
-    rows = conn.execute("select source_job_id from postings where source = 'reed'").fetchall()
-    return {r[0] for r in rows}
+def stored_reed_details(conn):
+    """Details already fetched for each Reed job, newest first. Saves a details call per known job."""
+    rows = conn.execute(
+        "select distinct on (source_job_id) source_job_id, payload->'details' "
+        "from raw_postings where source = 'reed' and payload->'details' <> 'null'::jsonb "
+        "order by source_job_id, fetched_at desc"
+    ).fetchall()
+    return {job_id: details for job_id, details in rows}
 
 
 def main():
@@ -89,13 +93,14 @@ def main():
         return
 
     with psycopg.connect(os.environ["DATABASE_URL"]) as conn:
-        already = known_reed_ids(conn)
+        stored = stored_reed_details(conn)
 
         # Reed first, so Reed rows win any cross-source duplicate.
         for job_id, (row, family) in reed_jobs.items():
-            if str(job_id) in already:
-                full = None  # already have the details; this pass just refreshes it
-                stats["reed_details_skipped"] += 1
+            fetched_now = str(job_id) not in stored
+            if not fetched_now:
+                full = stored[str(job_id)]  # fetched on an earlier run; no API call needed
+                stats["reed_details_reused"] += 1
             else:
                 try:
                     full = reed.details(job_id)
@@ -104,11 +109,9 @@ def main():
                     continue
                 stats["reed_details_calls"] += 1
                 time.sleep(reed.PAUSE_SECONDS)
-            store.save_raw(conn, "reed", job_id, {"search": row, "details": full})
+            # Store details only when newly fetched, so raw_postings doesn't repeat them every day.
+            store.save_raw(conn, "reed", job_id, {"search": row, "details": full if fetched_now else None})
             posting = mapping.from_reed(row, full, family)
-            if full is None:
-                # Keep the stored salary/description rather than blanking them.
-                posting = refresh_only(conn, posting)
             posting["company_id"] = store.company_id_for(conn, posting["company"] or "")
             stats[f"reed_{store.upsert_posting(conn, posting)}"] += 1
 
@@ -122,19 +125,6 @@ def main():
         conn.commit()
 
     print_summary(stats)
-
-
-def refresh_only(conn, posting):
-    """For a Reed job seen before, reuse the stored details fields."""
-    row = conn.execute(
-        "select salary_min, salary_max, salary_period, description, contract_type, full_time "
-        "from postings where source = 'reed' and source_job_id = %s",
-        (posting["source_job_id"],),
-    ).fetchone()
-    if row:
-        keys = ["salary_min", "salary_max", "salary_period", "description", "contract_type", "full_time"]
-        posting.update(dict(zip(keys, row)))
-    return posting
 
 
 def print_summary(stats, families=None):

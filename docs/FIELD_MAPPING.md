@@ -25,6 +25,7 @@ The same job appeared in both sources: Lead Data Analyst at Marshall Wolfe, Lond
 | `company_id` | `employerName` | `company.display_name` | Trim, lower-case, drop Ltd / Limited / PLC / LLP and punctuation, then look up or insert in `companies` |
 | `location_text` | `locationName` | `location.display_name` | As given |
 | `region` | Postcode or town lookup | `location.area[1]` | Reed needs a lookup (postcodes.io is free); Adzuna has it already |
+| `towns` | postcode → local authority (postcodes.io), else `locationName` | `location.area[-1]` | Every town the posting was seen in; used for the town filter |
 | `salary_min` / `salary_max` | `yearlyMinimumSalary` / `yearlyMaximumSalary` (details) | `salary_min` / `salary_max` | Always yearly figures; never use Reed's raw min/max for hourly or daily rates |
 | `salary_period` | `salaryType` | `per annum` | |
 | `salary_is_predicted` | always `false` | `salary_is_predicted == 1` | Estimates are labelled in the tracker, never shown as the employer's figure |
@@ -39,14 +40,15 @@ The same job appeared in both sources: Lead Data Analyst at Marshall Wolfe, Lond
 
 ## Rules decided so far
 
-1. **Title scope:** Data Analyst, BI Analyst, BI Developer, Business Intelligence Analyst / Developer / Specialist, Power BI Developer, Reporting / MI Analyst, Insight Analyst. Code: `pipeline/tag/titles.py`.
-2. **Training adverts:** titles such as "Placement Programme – No Experience Needed" are kept in `raw_postings` but excluded from the tracker.
+1. **Title scope:** Data Analyst, BI Analyst, BI Developer, Business Intelligence Analyst / Developer / Specialist, Power BI Developer, Reporting / MI Analyst, Insight Analyst. Reporting titles that also say financial, finance, risk, regulatory, treasury or accounting are out. Code: `pipeline/tag/titles.py`.
+2. **Training adverts:** excluded, and never stored. Caught by title wording ("No Experience Needed", "Placement Programme") and by advertiser (ITOL Recruit, IT Online Learning), because their titles vary. ITOL alone made up at least 118 of the first 548 rows.
 3. **Cross-source duplicates:** when Reed and Adzuna hold the same job, the Reed row wins, because it has the full description and the employer's own salary.
 4. **Extra Reed fields:** `contract_type`, `full_time` and `applications` are loaded (migration `002`). Applications measures competition per job.
-5. **Same job, several towns:** kept as separate rows (e.g. Matchtech's Commercial Analyst in Basingstoke and Winchester), because the dedup key includes location.
+5. **Dedup key = company | title | region** (changed 15 Oct 2026, was town). One job is often listed under several towns or postcodes (e.g. Halton Housing: "Cronton, Widnes", "Bold Heath, Widnes", "Widnes"). Every town is kept in `towns`, so filtering by town still works. Trade-off: the same role at the same company in two towns of one region becomes one row. If the region is unknown, the town is used instead.
 6. **Regions:** both sources map to the 12 UK regions (`pipeline/tag/clean.py`). Adzuna uses `location.area[1]`; Reed locations are looked up on postcodes.io (`pipeline/tag/regions.py`). A failed lookup leaves the region empty instead of stopping the run.
 7. **Inactive postings:** a Reed job is closed after its `expires_at`; an Adzuna job is closed when it has not been seen for 3 days. Rows are never deleted.
+8. **Rebuilds:** `python -m pipeline.rebuild` replays `raw_postings` with the current rules. No Reed or Adzuna calls; first-seen and last-seen dates are kept.
 
 ## Open questions
 
-- **postcodes.io field names:** the code reads `region`, then `country`. This is confirmed only by tests with fake responses; the first real run will show whether Reed regions fill in.
+- **postcodes.io town field:** regions are confirmed by the first real load (516 of 548 rows had one). The town for a Reed postcode comes from `admin_district`, which is tested only with fake responses so far.

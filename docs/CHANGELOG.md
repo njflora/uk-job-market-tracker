@@ -4,6 +4,7 @@ Newest first. One line per change.
 
 | Date | Change |
 | --- | --- |
+| 2026-10-15 | Dedup key changed to company \| title \| region; added `towns` (migration `003`), training-provider blocklist (ITOL), finance-reporting exclusion and `pipeline/rebuild.py`; Reed details now reused from `raw_postings` |
 | 2026-10-15 | Added daily GitHub Actions workflow (`.github/workflows/ingest.yml`), 05:17 UTC plus a manual run button |
 | 2026-10-15 | First real load: 548 postings stored; 516 (94%) have a region |
 | 2026-10-15 | Added the first loader: `pipeline/run.py`, `store.py`, `mapping.py`, `tag/clean.py`, `tag/regions.py` (tested on fake data) |

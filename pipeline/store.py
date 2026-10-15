@@ -2,7 +2,8 @@
 
 Rules (see docs/FIELD_MAPPING.md):
 - Every raw API record is saved to raw_postings before anything else.
-- A posting is matched on its dedup_key (company | title | location).
+- A posting is matched on its dedup_key (company | title | region).
+- Every town a posting was seen in is kept in `towns`, so the tracker can filter by town.
 - When the same job exists from both sources, Reed wins: an Adzuna row can be
   replaced by Reed, but a Reed row is never overwritten by Adzuna.
 - Re-seeing a posting updates last_seen and keeps it active.
@@ -18,6 +19,9 @@ POSTING_COLUMNS = [
     "salary_is_predicted", "description", "url", "posted_at", "expires_at",
     "contract_type", "full_time", "applications", "role_family",
 ]
+
+# Adds a town to the list without repeating it.
+ADD_TOWN = "towns = (select array(select distinct t from unnest(towns || %s::text[]) as t where t is not null))"
 
 
 def save_raw(conn, source, source_job_id, payload):
@@ -41,35 +45,41 @@ def company_id_for(conn, name):
     return row[0]
 
 
-def upsert_posting(conn, posting):
-    """Insert a new posting, or refresh an existing one. Returns 'new', 'updated' or 'kept'."""
+def upsert_posting(conn, posting, seen_at=None):
+    """Insert a new posting, or refresh an existing one. Returns 'new', 'updated' or 'kept'.
+
+    seen_at is normally now(); the rebuild passes the original fetch time instead.
+    """
+    town = [posting.get("town")] if posting.get("town") else []
     existing = conn.execute(
         "select posting_id, source from postings where dedup_key = %s", (posting["dedup_key"],)
     ).fetchone()
 
     if existing is None:
-        cols = ", ".join(POSTING_COLUMNS)
-        marks = ", ".join(["%s"] * len(POSTING_COLUMNS))
+        cols = POSTING_COLUMNS + ["towns", "first_seen", "last_seen"]
+        marks = ", ".join(["%s"] * len(POSTING_COLUMNS)) + ", %s, coalesce(%s, now()), coalesce(%s, now())"
         conn.execute(
-            f"insert into postings ({cols}) values ({marks})",
-            [posting.get(c) for c in POSTING_COLUMNS],
+            f"insert into postings ({', '.join(cols)}) values ({marks})",
+            [posting.get(c) for c in POSTING_COLUMNS] + [town, seen_at, seen_at],
         )
         return "new"
 
     posting_id, existing_source = existing
     if existing_source == "reed" and posting["source"] == "adzuna":
-        # Reed wins: only record that the job is still live.
+        # Reed wins: only record the extra town and that the job is still live.
         conn.execute(
-            "update postings set last_seen = now(), is_active = true where posting_id = %s",
-            (posting_id,),
+            f"update postings set {ADD_TOWN}, last_seen = greatest(last_seen, coalesce(%s, now())), "
+            "is_active = true where posting_id = %s",
+            (town, seen_at, posting_id),
         )
         return "kept"
 
     sets = ", ".join(f"{c} = %s" for c in POSTING_COLUMNS if c != "dedup_key")
     values = [posting.get(c) for c in POSTING_COLUMNS if c != "dedup_key"]
     conn.execute(
-        f"update postings set {sets}, last_seen = now(), is_active = true where posting_id = %s",
-        values + [posting_id],
+        f"update postings set {sets}, {ADD_TOWN}, "
+        "last_seen = greatest(last_seen, coalesce(%s, now())), is_active = true where posting_id = %s",
+        values + [town, seen_at, posting_id],
     )
     return "updated"
 
