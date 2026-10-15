@@ -97,7 +97,14 @@ python -m pipeline.run
 
 ## Roadmap
 
-- **Gap-to-project library.** For each missing skill, a small project to close the gap.
+1. **Harden the foundations:** automatic tests, seniority tagging and a schedule keep-alive (raw-data savings and weekly backups are done).
+2. **Gap-to-project library:** a small, real project for every missing skill, starting with Microsoft Fabric and Azure.
+3. **Trends over time:** rising and falling skills, and salary by role, once there are 8 weeks of data.
+4. **All data roles:** Data Engineer, Data Scientist and Analytics Engineer.
+5. **Optional AI-assisted matching** with the visitor's own key, never stored.
+6. **All tech roles**, then, if useful, **any UK job** using the ESCO skills taxonomy and ONS occupation codes.
+
+Full detail, with effort and success measures for each phase: [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Data sources
 

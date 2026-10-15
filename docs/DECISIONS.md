@@ -15,7 +15,8 @@ Why each service was chosen. Checked 13 October 2026.
 - Railway was rejected: after a 30-day trial its Free plan gives $1 a month of credit, which will not run a database all month.
 - Free projects pause after a week without activity; the daily ingest job prevents this.
 - Connections from GitHub Actions use the Session pooler (IPv4). The direct connection is IPv6 only.
-- No backups on Free, so a weekly `pg_dump` job is planned.
+- No backups on Free, so `.github/workflows/backup.yml` runs `pg_dump` every Sunday and keeps the file for 30 days as a workflow artifact. It holds public job data only. To restore: download the artifact, then `pg_restore --clean --if-exists --no-owner -d "<DATABASE_URL>" backup.dump`.
+- `raw_postings` saves a record only when it has changed; otherwise it updates `last_seen_at` (migration `007`). This keeps growth small while rebuilds still know when each job was last seen.
 
 ## Scheduling: GitHub Actions
 

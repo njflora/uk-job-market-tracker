@@ -25,11 +25,12 @@ def latest_raw(conn):
     """Collapse raw_postings to one record per job, keeping the newest data and the first/last fetch times."""
     jobs = {}
     rows = conn.execute(
-        "select source, source_job_id, fetched_at, payload from raw_postings order by fetched_at, raw_id"
+        "select source, source_job_id, fetched_at, coalesce(last_seen_at, fetched_at), payload "
+        "from raw_postings order by fetched_at, raw_id"
     ).fetchall()
-    for source, job_id, fetched_at, payload in rows:
-        job = jobs.setdefault((source, job_id), {"first": fetched_at, "details": None})
-        job["last"] = fetched_at
+    for source, job_id, fetched_at, last_seen, payload in rows:
+        job = jobs.setdefault((source, job_id), {"first": fetched_at, "last": last_seen, "details": None})
+        job["last"] = max(job["last"], last_seen)
         if source == "reed":
             job["row"] = payload.get("search")
             if payload.get("details"):

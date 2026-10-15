@@ -144,13 +144,15 @@ def main():
                 stats["reed_details_calls"] += 1
                 time.sleep(reed.PAUSE_SECONDS)
             # Store details only when newly fetched, so raw_postings doesn't repeat them every day.
-            store.save_raw(conn, "reed", job_id, {"search": row, "details": full if fetched_now else None})
+            saved = store.save_raw(conn, "reed", job_id, {"search": row, "details": full if fetched_now else None})
+            stats["raw_saved" if saved else "raw_unchanged"] += 1
             posting = mapping.from_reed(row, full, family)
             posting["company_id"] = store.company_id_for(conn, posting["company"] or "")
             stats[f"reed_{store.upsert_posting(conn, posting)}"] += 1
 
         for job_id, (row, family) in adzuna_jobs.items():
-            store.save_raw(conn, "adzuna", job_id, row)
+            saved = store.save_raw(conn, "adzuna", job_id, row)
+            stats["raw_saved" if saved else "raw_unchanged"] += 1
             posting = mapping.from_adzuna(row, family)
             posting["company_id"] = store.company_id_for(conn, posting["company"] or "")
             stats[f"adzuna_{store.upsert_posting(conn, posting)}"] += 1

@@ -1,0 +1,36 @@
+# Weekly database backup. Supabase's free tier has no backups of its own.
+# Each run saves a compressed pg_dump as a workflow artifact, kept for 30 days.
+# To restore: download the artifact, then run
+#   pg_restore --clean --if-exists --no-owner -d "<DATABASE_URL>" backup.dump
+name: Weekly backup
+
+on:
+  schedule:
+    - cron: "23 3 * * 0"   # Sundays at 03:23 UTC
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Install PostgreSQL 17 client (must match Supabase's server version)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-common
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -y -qq postgresql-client-17
+
+      - name: Dump the database
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          /usr/lib/postgresql/17/bin/pg_dump "$DATABASE_URL" --schema=public --no-owner --no-privileges -Fc -f backup.dump
+          ls -lh backup.dump
+
+      - name: Keep the dump for 30 days
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ github.run_number }}
+          path: backup.dump
+          retention-days: 30

@@ -25,10 +25,24 @@ ADD_TOWN = "towns = (select array(select distinct t from unnest(towns || %s::tex
 
 
 def save_raw(conn, source, source_job_id, payload):
+    """Save a raw API record, but only if it differs from the latest stored copy.
+
+    Unchanged: the latest copy's last_seen_at is updated instead (migration 007).
+    Returns True if a new row was written.
+    """
+    latest = conn.execute(
+        "select raw_id, payload from raw_postings where source = %s and source_job_id = %s "
+        "order by fetched_at desc, raw_id desc limit 1",
+        (source, str(source_job_id)),
+    ).fetchone()
+    if latest is not None and latest[1] == payload:
+        conn.execute("update raw_postings set last_seen_at = now() where raw_id = %s", (latest[0],))
+        return False
     conn.execute(
-        "insert into raw_postings (source, source_job_id, payload) values (%s, %s, %s)",
+        "insert into raw_postings (source, source_job_id, payload, last_seen_at) values (%s, %s, %s, now())",
         (source, str(source_job_id), Jsonb(payload)),
     )
+    return True
 
 
 def company_id_for(conn, name):
