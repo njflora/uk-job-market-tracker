@@ -1,0 +1,32 @@
+# Checks every morning that the daily ingest really worked, even if its run went green.
+# Runs about two hours after the ingest (05:17 UTC). If a check fails, this run goes red
+# and GitHub emails you. Each run's page shows a summary table of the figures.
+# The checks are in pipeline/health.py.
+name: Health check
+
+on:
+  schedule:
+    - cron: "43 7 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+      - name: Install
+        run: pip install -r requirements.txt
+      - name: Check the pipeline
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
+        run: python -m pipeline.health

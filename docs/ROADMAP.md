@@ -11,7 +11,7 @@ How this project could continue after the v1 tracker and v2 CV matcher. Each pha
 | v1 tracker | Public, filterable table and skill-demand chart on GitHub Pages |
 | v2 matcher | In-browser CV reading, role-archetype scores, best-match job sorting |
 | Security | Row level security: the public key can only read three views |
-| Upkeep | Tests on every push, weekly backup, monthly keep-alive, seniority filter |
+| Upkeep | Tests on every push, daily health check, weekly backup, monthly keep-alive, seniority filter |
 
 ## Phase 1: Harden the foundations (done)
 

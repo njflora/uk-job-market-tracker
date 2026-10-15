@@ -46,7 +46,8 @@ flowchart LR
 4. **Deduplicate.** The same job on both sites, or under several towns, becomes one row. The key is company, title and region; every town is kept so the town filter still works.
 5. **Tag skills.** Each posting is checked against 48 skills in 7 categories. Adzuna only provides a 500-character snippet, so skill figures use full-text Reed postings only.
 6. **Serve.** The site reads three read-only database views through Supabase's public API. Row level security stops the public key from reading raw data or changing anything.
-7. **Match.** In the browser, a CV is tagged with the same 48 skill rules and scored against each role type's core skills (named in at least 25% of that role's postings). A sibling skill, such as Tableau for Power BI, counts as half.
+7. **Watch.** A health check runs two hours after each ingest. If a source stops loading, live postings drop sharply, the database nears the free limit or the site stops responding, the run fails and GitHub sends an email.
+8. **Match.** In the browser, a CV is tagged with the same 48 skill rules and scored against each role type's core skills (named in at least 25% of that role's postings). A sibling skill, such as Tableau for Power BI, counts as half.
 
 ## Data quality decisions
 
@@ -79,7 +80,7 @@ frontend/       React site
 scripts/        One-off test scripts
 tests/          Automatic tests, run on every push
 docs/           Field mapping, skills, decisions, changelog
-.github/        Daily ingest, site deploy, tests, backup and keep-alive workflows
+.github/        Daily ingest, health check, site deploy, tests, backup and keep-alive workflows
 ```
 
 ## Running it yourself

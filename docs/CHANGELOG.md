@@ -4,6 +4,7 @@ Newest first. One line per change.
 
 | Date | Change |
 | --- | --- |
+| 2026-10-15 | Daily health check (`pipeline/health.py`, `health.yml`, 07:43 UTC): fails, and so emails, if a source stops loading, live postings drop below 100, the database passes 400 MB, or the site or public API stops responding; keep-alive now also re-enables it |
 | 2026-10-15 | Added `pytest.ini` so automatic tests only look in `tests/`; the first Tests run had failed by picking up the one-off scripts in `scripts/`, which need real API keys |
 | 2026-10-15 | Phase 1 finished. Seniority from job titles (`pipeline/tag/seniority.py`, migration `008`) with a Seniority filter on the site; automatic tests on every push (`tests/`, shared `tests/skill_cases.json`, `ci.yml`); monthly keep-alive workflow (`keepalive.yml`); README screenshot now shows Match my CV |
 | 2026-10-15 | Raw records saved only when changed (migration `007`, `last_seen_at`); weekly `pg_dump` backup workflow |

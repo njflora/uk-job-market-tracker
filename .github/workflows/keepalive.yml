@@ -3,8 +3,8 @@
 # GitHub turns off scheduled workflows in a public repository after 60 days
 # with no repository activity. On the 1st of each month this job checks the
 # date of the last commit. If it is more than 45 days old, it pushes one empty
-# commit, which counts as activity. It also re-enables the ingest and backup
-# workflows in case they were already turned off.
+# commit, which counts as activity. It also re-enables the ingest, backup
+# and health check workflows in case they were already turned off.
 #
 # This job is itself scheduled, so the empty commit keeps it alive too.
 # Your local copy will then be one commit behind: run `git pull` before your next push.
@@ -45,3 +45,4 @@ jobs:
         run: |
           gh workflow enable ingest.yml
           gh workflow enable backup.yml
+          gh workflow enable health.yml
